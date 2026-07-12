@@ -1,12 +1,14 @@
 
-from flask import Flask, request, jsonify
+from http.server import BaseHTTPRequestHandler
 import pickle
 import string
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
+import json
 import os
 
+# Download NLTK data if not present
 nltk.data.path.append('/tmp/nltk_data')
 try:
     nltk.data.find('corpora/stopwords')
@@ -16,8 +18,6 @@ try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt', download_dir='/tmp/nltk_data')
-
-app = Flask(__name__)
 
 ps = PorterStemmer()
 
@@ -49,18 +49,25 @@ def transform_text(text):
 vectorizer = pickle.load(open(os.path.join(os.path.dirname(__file__), 'vectorizer.pkl'), 'rb'))
 model = pickle.load(open(os.path.join(os.path.dirname(__file__), 'model.pkl'), 'rb'))
 
-@app.route('/', methods=['POST'])
-def predict():
-    data = request.get_json()
-    input_sms = data.get('message', '')
-    if not input_sms:
-        return jsonify({'error': 'No message provided'}), 400
-    
-    transformed_sms = transform_text(input_sms)
-    vector_input = vectorizer.transform([transformed_sms])
-    result = model.predict(vector_input)[0]
-    
-    return jsonify({'prediction': int(result)})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+class handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data)
+        input_sms = data.get('message', '')
+        
+        if not input_sms:
+            self.send_response(400)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'No message provided'}).encode('utf-8'))
+            return
+        
+        transformed_sms = transform_text(input_sms)
+        vector_input = vectorizer.transform([transformed_sms])
+        result = model.predict(vector_input)[0]
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'prediction': int(result)}).encode('utf-8'))
