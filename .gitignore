@@ -1,0 +1,20 @@
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+# Ignore pickle files except the trained model and vectorizer
+*.pkl
+!api/model.pkl
+!api/vectorizer.pkl
+*.onnx
+.env
+.vscode/
+.idea/
+*.log
+node_modules/
