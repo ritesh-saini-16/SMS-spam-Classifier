@@ -7,15 +7,8 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import os
 
-nltk.data.path.append('/tmp/nltk_data')
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords', download_dir='/tmp/nltk_data')
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', download_dir='/tmp/nltk_data')
+nltk_data_path = os.path.join(os.path.dirname(__file__), 'nltk_data')
+nltk.data.path.append(nltk_data_path)
 
 ps = PorterStemmer()
 
@@ -50,6 +43,7 @@ model = pickle.load(open(os.path.join(os.path.dirname(__file__), 'model.pkl'), '
 app = Flask(__name__)
 
 @app.route('/', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def predict():
     data = request.get_json()
     input_sms = data.get('message', '')

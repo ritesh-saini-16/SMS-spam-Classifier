@@ -7,10 +7,10 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import os
 
-nltk.download('stopwords')
-nltk.download('punkt')
+nltk_data_path = os.path.join(os.path.dirname(__file__), 'api', 'nltk_data')
+nltk.data.path.append(nltk_data_path)
 
-app = Flask(__name__, static_folder='public', static_url_path='')
+app = Flask(__name__, static_folder='.', static_url_path='')
 
 ps = PorterStemmer()
 
@@ -44,7 +44,7 @@ model = pickle.load(open(os.path.join('api', 'model.pkl'), 'rb'))
 
 @app.route('/')
 def index():
-    return send_from_directory('public', 'index.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
